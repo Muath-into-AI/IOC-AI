@@ -8,6 +8,7 @@ from ioc_enrich.cache import Cache
 from ioc_enrich.detect import IOCType, detect
 from ioc_enrich.refang import refang
 from ioc_enrich.scoring import EnrichmentResult, score
+from ioc_enrich.sources import ALL_SOURCES
 from ioc_enrich.sources.base import Source, SourceResult, Status
 
 
@@ -40,8 +41,11 @@ class Enricher:
         if ioc_type is not IOCType.UNKNOWN:
             for src in self.sources:
                 results.append(self._lookup(src, ioc, ioc_type))
+            supported = {c.name for c in ALL_SOURCES if ioc_type in c.supported_types}
             results.extend(
-                SourceResult(name, Status.SKIPPED, summary="no API key") for name in self.skipped
+                SourceResult(name, Status.SKIPPED, summary="no API key")
+                for name in self.skipped
+                if name in supported
             )
         return EnrichmentResult(ioc, raw.strip(), ioc_type, results, score(results))
 
